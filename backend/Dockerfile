@@ -10,7 +10,10 @@ RUN apk add --no-cache \
     freetype-dev \
     harfbuzz \
     ca-certificates \
-    ttf-freefont
+    ttf-freefont \
+    python3 \
+    make \
+    g++
 
 # Nastavení proměnných prostředí pro Puppeteer
 ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true \
@@ -20,16 +23,17 @@ ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true \
 COPY package*.json ./
 
 # Instalace všech závislostí včetně devDependencies pro build
-RUN npm install
+RUN npm install --quiet
+
+# Kopírování zdrojových souborů
+COPY . .
 
 # Build aplikace
 RUN npm run build
 
-# Odstranění devDependencies pro produkci
-RUN npm prune --production
-
-# Kopírování zdrojových souborů
-COPY . .
+# Odstranění devDependencies a build souborů pro produkci
+RUN npm prune --production && \
+    rm -rf src tsconfig.json
 
 # Expose port
 EXPOSE 3001
