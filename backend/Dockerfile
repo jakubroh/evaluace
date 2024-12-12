@@ -19,14 +19,17 @@ ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true \
 # Kopírování package.json a package-lock.json
 COPY package*.json ./
 
-# Instalace závislostí
-RUN npm install --production --silent
-
-# Kopírování zdrojových souborů
-COPY . .
+# Instalace všech závislostí včetně devDependencies pro build
+RUN npm install
 
 # Build aplikace
 RUN npm run build
+
+# Odstranění devDependencies pro produkci
+RUN npm prune --production
+
+# Kopírování zdrojových souborů
+COPY . .
 
 # Expose port
 EXPOSE 3001

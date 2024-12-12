@@ -1,9 +1,9 @@
-import express from 'express';
+import { Router, Request, Response, NextFunction } from 'express';
 import { teacherAssignmentController } from '../controllers/teacherAssignment';
 import { authMiddleware } from '../middleware/auth';
 import { validateRequest } from '../middleware/validator';
 
-const router = express.Router();
+const router = Router();
 
 // Middleware pro ověření autentizace
 router.use(authMiddleware);
@@ -15,7 +15,7 @@ router.get('/:classId/assignments',
       classId: { type: 'number', required: true }
     }
   }),
-  async (req, res, next) => {
+  async (req: Request, res: Response, next: NextFunction) => {
     try {
       await teacherAssignmentController.getAssignments(req, res);
     } catch (error) {
@@ -35,7 +35,7 @@ router.post('/:classId/assignments',
       subjectId: { type: 'number', required: true }
     }
   }),
-  async (req, res, next) => {
+  async (req: Request, res: Response, next: NextFunction) => {
     try {
       await teacherAssignmentController.createAssignment(req, res);
     } catch (error) {
@@ -52,7 +52,7 @@ router.delete('/:classId/assignments/:assignmentId',
       assignmentId: { type: 'number', required: true }
     }
   }),
-  async (req, res, next) => {
+  async (req: Request, res: Response, next: NextFunction) => {
     try {
       await teacherAssignmentController.deleteAssignment(req, res);
     } catch (error) {
@@ -81,7 +81,7 @@ router.put('/:classId/assignments',
       }
     }
   }),
-  async (req, res, next) => {
+  async (req: Request, res: Response, next: NextFunction) => {
     try {
       await teacherAssignmentController.updateAssignments(req, res);
     } catch (error) {
