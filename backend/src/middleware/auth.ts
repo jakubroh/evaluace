@@ -1,4 +1,4 @@
-import { Request, Response, NextFunction } from 'express';
+import { Request, Response, NextFunction, RequestHandler } from 'express';
 import jwt from 'jsonwebtoken';
 
 export interface AuthRequest extends Request {
@@ -10,11 +10,12 @@ export interface AuthRequest extends Request {
   };
 }
 
-export const authMiddleware = (req: AuthRequest, res: Response, next: NextFunction) => {
+export const authMiddleware: RequestHandler = (req: AuthRequest, res: Response, next: NextFunction): void => {
   const authHeader = req.headers.authorization;
 
   if (!authHeader) {
-    return res.status(401).json({ error: 'Chybí autorizační token' });
+    res.status(401).json({ error: 'Chybí autorizační token' });
+    return;
   }
 
   const token = authHeader.split(' ')[1];
@@ -30,41 +31,46 @@ export const authMiddleware = (req: AuthRequest, res: Response, next: NextFuncti
     req.user = decoded;
     next();
   } catch (error) {
-    return res.status(401).json({ error: 'Neplatný token' });
+    res.status(401).json({ error: 'Neplatný token' });
   }
 };
 
-export const isAdmin = (req: AuthRequest, res: Response, next: NextFunction) => {
+export const isAdmin: RequestHandler = (req: AuthRequest, res: Response, next: NextFunction): void => {
   if (req.user?.role !== 'admin') {
-    return res.status(403).json({ message: 'Přístup pouze pro administrátory' });
+    res.status(403).json({ message: 'Přístup pouze pro administrátory' });
+    return;
   }
   next();
 };
 
-export const isDirector = (req: AuthRequest, res: Response, next: NextFunction) => {
+export const isDirector: RequestHandler = (req: AuthRequest, res: Response, next: NextFunction): void => {
   if (req.user?.role !== 'director') {
-    return res.status(403).json({ message: 'Přístup pouze pro ředitele' });
+    res.status(403).json({ message: 'Přístup pouze pro ředitele' });
+    return;
   }
   next();
 };
 
-export const isAdminOrDirector = (req: AuthRequest, res: Response, next: NextFunction) => {
+export const isAdminOrDirector: RequestHandler = (req: AuthRequest, res: Response, next: NextFunction): void => {
   if (!['admin', 'director'].includes(req.user?.role || '')) {
-    return res.status(403).json({ message: 'Přístup pouze pro administrátory nebo ředitele' });
+    res.status(403).json({ message: 'Přístup pouze pro administrátory nebo ředitele' });
+    return;
   }
   next();
 };
 
-export const checkSchoolAccess = (req: AuthRequest, res: Response, next: NextFunction) => {
+export const checkSchoolAccess: RequestHandler = (req: AuthRequest, res: Response, next: NextFunction): void => {
   const schoolId = parseInt(req.params.schoolId);
   
   if (req.user?.role === 'admin') {
-    return next();
+    next();
+    return;
   }
 
   if (req.user?.role === 'director' && req.user?.schoolId === schoolId) {
-    return next();
+    next();
+    return;
   }
 
-  return res.status(403).json({ message: 'Nemáte přístup k této škole' });
+  res.status(403).json({ message: 'Nemáte přístup k této škole' });
 }; 
