@@ -4,10 +4,11 @@ import { AuthRequest } from '../middleware/auth';
 
 export const teacherController = {
   // Získat všechny učitele
-  getAllTeachers: async (req: AuthRequest, res: Response) => {
+  getAllTeachers: async (req: AuthRequest, res: Response): Promise<void> => {
     try {
       if (!req.user) {
-        return res.status(401).json({ error: 'Neautorizovaný přístup' });
+        res.status(401).json({ error: 'Neautorizovaný přístup' });
+        return;
       }
 
       const result = await pool.query(
@@ -22,12 +23,13 @@ export const teacherController = {
   },
 
   // Přidat nového učitele
-  createTeacher: async (req: AuthRequest, res: Response) => {
+  createTeacher: async (req: AuthRequest, res: Response): Promise<void> => {
     const { name } = req.body;
 
     try {
       if (!req.user) {
-        return res.status(401).json({ error: 'Neautorizovaný přístup' });
+        res.status(401).json({ error: 'Neautorizovaný přístup' });
+        return;
       }
 
       const result = await pool.query(
@@ -42,13 +44,14 @@ export const teacherController = {
   },
 
   // Upravit učitele
-  updateTeacher: async (req: AuthRequest, res: Response) => {
+  updateTeacher: async (req: AuthRequest, res: Response): Promise<void> => {
     const { id } = req.params;
     const { name } = req.body;
 
     try {
       if (!req.user) {
-        return res.status(401).json({ error: 'Neautorizovaný přístup' });
+        res.status(401).json({ error: 'Neautorizovaný přístup' });
+        return;
       }
 
       const result = await pool.query(
@@ -57,7 +60,8 @@ export const teacherController = {
       );
 
       if (result.rows.length === 0) {
-        return res.status(404).json({ error: 'Učitel nebyl nalezen' });
+        res.status(404).json({ error: 'Učitel nebyl nalezen' });
+        return;
       }
 
       res.json(result.rows[0]);
@@ -68,12 +72,13 @@ export const teacherController = {
   },
 
   // Smazat učitele
-  deleteTeacher: async (req: AuthRequest, res: Response) => {
+  deleteTeacher: async (req: AuthRequest, res: Response): Promise<void> => {
     const { id } = req.params;
 
     try {
       if (!req.user) {
-        return res.status(401).json({ error: 'Neautorizovaný přístup' });
+        res.status(401).json({ error: 'Neautorizovaný přístup' });
+        return;
       }
 
       const result = await pool.query(
@@ -82,7 +87,8 @@ export const teacherController = {
       );
 
       if (result.rows.length === 0) {
-        return res.status(404).json({ error: 'Učitel nebyl nalezen' });
+        res.status(404).json({ error: 'Učitel nebyl nalezen' });
+        return;
       }
 
       res.status(204).send();

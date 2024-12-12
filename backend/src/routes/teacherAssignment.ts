@@ -1,4 +1,4 @@
-import { Router, Response, NextFunction, Request, Handler } from 'express';
+import { Router, Response, NextFunction, Request, RequestHandler } from 'express';
 import { teacherAssignmentController } from '../controllers/teacherAssignment';
 import { authMiddleware, AuthRequest } from '../middleware/auth';
 import { validateRequest } from '../middleware/validator';
@@ -9,15 +9,15 @@ const router = Router();
 router.use(authMiddleware);
 
 // Helper pro typově bezpečné handlery
-const asyncHandler = (fn: (req: AuthRequest, res: Response) => Promise<void>): Handler => {
-  return (req: Request, res: Response, next: NextFunction) => {
+const asyncHandler = (fn: (req: AuthRequest, res: Response) => Promise<void>): RequestHandler => {
+  return (req, res, next) => {
     Promise.resolve(fn(req as AuthRequest, res)).catch(next);
   };
 };
 
 // Middleware pro validaci
-const validate = (schema: any): Handler => {
-  return (req: Request, res: Response, next: NextFunction) => {
+const validate = (schema: any): RequestHandler => {
+  return (req, res, next) => {
     validateRequest(schema)(req, res, next);
   };
 };

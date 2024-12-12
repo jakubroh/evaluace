@@ -2,14 +2,22 @@ import express from 'express';
 import { teacherController } from '../controllers/teacher';
 import { authMiddleware } from '../middleware/auth';
 import { validateRequest } from '../middleware/validator';
+import { RequestHandler } from 'express';
 
 const router = express.Router();
 
 // Middleware pro ověření autentizace
 router.use(authMiddleware);
 
+// Helper pro typově bezpečné handlery
+const asyncHandler = (fn: RequestHandler): RequestHandler => {
+  return (req, res, next) => {
+    Promise.resolve(fn(req, res, next)).catch(next);
+  };
+};
+
 // GET /api/teachers - Získat všechny učitele
-router.get('/', teacherController.getAllTeachers);
+router.get('/', asyncHandler(teacherController.getAllTeachers));
 
 // POST /api/teachers - Vytvořit nového učitele
 router.post('/',
@@ -18,7 +26,7 @@ router.post('/',
       name: { type: 'string', required: true }
     }
   }),
-  teacherController.createTeacher
+  asyncHandler(teacherController.createTeacher)
 );
 
 // PUT /api/teachers/:id - Upravit učitele
@@ -31,7 +39,7 @@ router.put('/:id',
       name: { type: 'string', required: true }
     }
   }),
-  teacherController.updateTeacher
+  asyncHandler(teacherController.updateTeacher)
 );
 
 // DELETE /api/teachers/:id - Smazat učitele
@@ -41,7 +49,7 @@ router.delete('/:id',
       id: { type: 'number', required: true }
     }
   }),
-  teacherController.deleteTeacher
+  asyncHandler(teacherController.deleteTeacher)
 );
 
 export default router; 
