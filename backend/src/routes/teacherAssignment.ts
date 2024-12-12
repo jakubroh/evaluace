@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import type { Request, Response, NextFunction } from 'express';
+import type { RequestHandler } from 'express';
 import { teacherAssignmentController } from '../controllers/teacherAssignment';
 import { authMiddleware, AuthRequest } from '../middleware/auth';
 import { validateRequest } from '../middleware/validator';
@@ -10,8 +10,8 @@ const router = Router();
 router.use(authMiddleware);
 
 // Helper pro typově bezpečné handlery
-const asyncHandler = (fn: (req: AuthRequest, res: Response) => Promise<void>) => {
-  return function(req: Request, res: Response, next: NextFunction): void {
+const asyncHandler = (fn: (req: AuthRequest, res: Response) => Promise<void>): RequestHandler => {
+  return (req, res, next) => {
     Promise.resolve(fn(req as AuthRequest, res)).catch(next);
   };
 };
@@ -22,7 +22,7 @@ router.get('/:classId/assignments',
     params: {
       classId: { type: 'number', required: true }
     }
-  }),
+  }) as RequestHandler,
   asyncHandler(teacherAssignmentController.getAssignments)
 );
 
@@ -36,7 +36,7 @@ router.post('/:classId/assignments',
       teacherId: { type: 'number', required: true },
       subjectId: { type: 'number', required: true }
     }
-  }),
+  }) as RequestHandler,
   asyncHandler(teacherAssignmentController.createAssignment)
 );
 
@@ -47,7 +47,7 @@ router.delete('/:classId/assignments/:assignmentId',
       classId: { type: 'number', required: true },
       assignmentId: { type: 'number', required: true }
     }
-  }),
+  }) as RequestHandler,
   asyncHandler(teacherAssignmentController.deleteAssignment)
 );
 
@@ -70,7 +70,7 @@ router.put('/:classId/assignments',
         }
       }
     }
-  }),
+  }) as RequestHandler,
   asyncHandler(teacherAssignmentController.updateAssignments)
 );
 
