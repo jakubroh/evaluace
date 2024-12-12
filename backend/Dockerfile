@@ -2,8 +2,9 @@ FROM node:18-alpine
 
 WORKDIR /app
 
-# Instalace závislostí pro Puppeteer
-RUN apk add --no-cache \
+# Instalace závislostí pro Puppeteer a další nástroje
+RUN apk update && \
+    apk add --no-cache \
     chromium \
     nss \
     freetype \
@@ -13,7 +14,8 @@ RUN apk add --no-cache \
     ttf-freefont \
     python3 \
     make \
-    g++
+    g++ \
+    && rm -rf /var/cache/apk/*
 
 # Nastavení proměnných prostředí pro Puppeteer
 ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true \
@@ -23,7 +25,7 @@ ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true \
 COPY package*.json ./
 
 # Instalace všech závislostí včetně devDependencies pro build
-RUN npm install --quiet
+RUN npm ci
 
 # Kopírování zdrojových souborů
 COPY . .
@@ -32,8 +34,8 @@ COPY . .
 RUN npm run build
 
 # Odstranění devDependencies a build souborů pro produkci
-RUN npm prune --production && \
-    rm -rf src tsconfig.json
+RUN npm ci --only=production && \
+    npm cache clean --force
 
 # Expose port
 EXPOSE 3001
