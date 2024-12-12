@@ -1,13 +1,14 @@
-import { Request, Response } from 'express';
+import { Response } from 'express';
 import { pool } from '../db/pool';
 import { AuthRequest } from '../middleware/auth';
 
 export const subjectController = {
   // Získat všechny předměty
-  getAllSubjects: async (req: AuthRequest, res: Response) => {
+  getAllSubjects: async (req: AuthRequest, res: Response): Promise<void> => {
     try {
       if (!req.user) {
-        return res.status(401).json({ error: 'Neautorizovaný přístup' });
+        res.status(401).json({ error: 'Neautorizovaný přístup' });
+        return;
       }
 
       const result = await pool.query(
@@ -22,12 +23,13 @@ export const subjectController = {
   },
 
   // Přidat nový předmět
-  createSubject: async (req: AuthRequest, res: Response) => {
+  createSubject: async (req: AuthRequest, res: Response): Promise<void> => {
     const { name } = req.body;
 
     try {
       if (!req.user) {
-        return res.status(401).json({ error: 'Neautorizovaný přístup' });
+        res.status(401).json({ error: 'Neautorizovaný přístup' });
+        return;
       }
 
       const result = await pool.query(
@@ -42,13 +44,14 @@ export const subjectController = {
   },
 
   // Upravit předmět
-  updateSubject: async (req: AuthRequest, res: Response) => {
+  updateSubject: async (req: AuthRequest, res: Response): Promise<void> => {
     const { id } = req.params;
     const { name } = req.body;
 
     try {
       if (!req.user) {
-        return res.status(401).json({ error: 'Neautorizovaný přístup' });
+        res.status(401).json({ error: 'Neautorizovaný přístup' });
+        return;
       }
 
       const result = await pool.query(
@@ -57,7 +60,8 @@ export const subjectController = {
       );
 
       if (result.rows.length === 0) {
-        return res.status(404).json({ error: 'Předmět nebyl nalezen' });
+        res.status(404).json({ error: 'Předmět nebyl nalezen' });
+        return;
       }
 
       res.json(result.rows[0]);
@@ -68,12 +72,13 @@ export const subjectController = {
   },
 
   // Smazat předmět
-  deleteSubject: async (req: AuthRequest, res: Response) => {
+  deleteSubject: async (req: AuthRequest, res: Response): Promise<void> => {
     const { id } = req.params;
 
     try {
       if (!req.user) {
-        return res.status(401).json({ error: 'Neautorizovaný přístup' });
+        res.status(401).json({ error: 'Neautorizovaný přístup' });
+        return;
       }
 
       const result = await pool.query(
@@ -82,7 +87,8 @@ export const subjectController = {
       );
 
       if (result.rows.length === 0) {
-        return res.status(404).json({ error: 'Předmět nebyl nalezen' });
+        res.status(404).json({ error: 'Předmět nebyl nalezen' });
+        return;
       }
 
       res.status(204).send();
