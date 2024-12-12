@@ -1,4 +1,5 @@
-import { Router, Response, NextFunction } from 'express';
+import { Router, Response, NextFunction, Request } from 'express';
+import { RequestHandler } from 'express-serve-static-core';
 import { teacherAssignmentController } from '../controllers/teacherAssignment';
 import { authMiddleware, AuthRequest } from '../middleware/auth';
 import { validateRequest } from '../middleware/validator';
@@ -9,15 +10,18 @@ const router = Router();
 router.use(authMiddleware);
 
 // Helper pro typově bezpečné handlery
-const asyncHandler = (handler: (req: AuthRequest, res: Response) => Promise<void>) => {
-  return function(req: AuthRequest, res: Response, next: NextFunction) {
-    handler(req, res).catch(next);
+const asyncHandler = (handler: (req: AuthRequest, res: Response) => Promise<void>): RequestHandler => {
+  return (req: Request, res: Response, next: NextFunction): void => {
+    Promise.resolve(handler(req as AuthRequest, res)).catch(next);
   };
 };
 
+// Middleware pro validaci
+const validate = (schema: any): RequestHandler => validateRequest(schema);
+
 // GET /api/classes/:classId/assignments - Získat všechna přiřazení pro třídu
 router.get('/:classId/assignments',
-  validateRequest({
+  validate({
     params: {
       classId: { type: 'number', required: true }
     }
@@ -27,7 +31,7 @@ router.get('/:classId/assignments',
 
 // POST /api/classes/:classId/assignments - Vytvořit nové přiřazení
 router.post('/:classId/assignments',
-  validateRequest({
+  validate({
     params: {
       classId: { type: 'number', required: true }
     },
@@ -41,7 +45,7 @@ router.post('/:classId/assignments',
 
 // DELETE /api/classes/:classId/assignments/:assignmentId - Smazat přiřazení
 router.delete('/:classId/assignments/:assignmentId',
-  validateRequest({
+  validate({
     params: {
       classId: { type: 'number', required: true },
       assignmentId: { type: 'number', required: true }
@@ -52,7 +56,7 @@ router.delete('/:classId/assignments/:assignmentId',
 
 // PUT /api/classes/:classId/assignments - Aktualizovat všechna přiřazení pro třídu
 router.put('/:classId/assignments',
-  validateRequest({
+  validate({
     params: {
       classId: { type: 'number', required: true }
     },
