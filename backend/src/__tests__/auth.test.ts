@@ -2,6 +2,7 @@ import request from 'supertest';
 import { app } from '../index';
 import { testPool } from './setup';
 import jwt from 'jsonwebtoken';
+import bcrypt from 'bcrypt';
 
 describe('Auth API', () => {
   beforeEach(async () => {

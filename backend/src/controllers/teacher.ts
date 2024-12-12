@@ -6,6 +6,10 @@ export const teacherController = {
   // Získat všechny učitele
   getAllTeachers: async (req: AuthRequest, res: Response) => {
     try {
+      if (!req.user) {
+        return res.status(401).json({ error: 'Neautorizovaný přístup' });
+      }
+
       const result = await pool.query(
         'SELECT id, name FROM teachers WHERE school_id = $1',
         [req.user.schoolId]
@@ -22,6 +26,10 @@ export const teacherController = {
     const { name } = req.body;
 
     try {
+      if (!req.user) {
+        return res.status(401).json({ error: 'Neautorizovaný přístup' });
+      }
+
       const result = await pool.query(
         'INSERT INTO teachers (name, school_id) VALUES ($1, $2) RETURNING id, name',
         [name, req.user.schoolId]
@@ -39,6 +47,10 @@ export const teacherController = {
     const { name } = req.body;
 
     try {
+      if (!req.user) {
+        return res.status(401).json({ error: 'Neautorizovaný přístup' });
+      }
+
       const result = await pool.query(
         'UPDATE teachers SET name = $1 WHERE id = $2 AND school_id = $3 RETURNING id, name',
         [name, id, req.user.schoolId]
@@ -60,6 +72,10 @@ export const teacherController = {
     const { id } = req.params;
 
     try {
+      if (!req.user) {
+        return res.status(401).json({ error: 'Neautorizovaný přístup' });
+      }
+
       const result = await pool.query(
         'DELETE FROM teachers WHERE id = $1 AND school_id = $2 RETURNING id',
         [id, req.user.schoolId]
