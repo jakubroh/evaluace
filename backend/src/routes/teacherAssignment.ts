@@ -15,12 +15,8 @@ router.get('/:classId/assignments',
       classId: { type: 'number', required: true }
     }
   }),
-  async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-    try {
-      await teacherAssignmentController.getAssignments(req, res);
-    } catch (error) {
-      next(error);
-    }
+  (req: Request, res: Response, next: NextFunction) => {
+    teacherAssignmentController.getAssignments(req, res).catch(next);
   }
 );
 
@@ -35,12 +31,8 @@ router.post('/:classId/assignments',
       subjectId: { type: 'number', required: true }
     }
   }),
-  async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-    try {
-      await teacherAssignmentController.createAssignment(req, res);
-    } catch (error) {
-      next(error);
-    }
+  (req: Request, res: Response, next: NextFunction) => {
+    teacherAssignmentController.createAssignment(req, res).catch(next);
   }
 );
 
@@ -52,12 +44,8 @@ router.delete('/:classId/assignments/:assignmentId',
       assignmentId: { type: 'number', required: true }
     }
   }),
-  async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-    try {
-      await teacherAssignmentController.deleteAssignment(req, res);
-    } catch (error) {
-      next(error);
-    }
+  (req: Request, res: Response, next: NextFunction) => {
+    teacherAssignmentController.deleteAssignment(req, res).catch(next);
   }
 );
 
@@ -81,12 +69,8 @@ router.put('/:classId/assignments',
       }
     }
   }),
-  async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-    try {
-      await teacherAssignmentController.updateAssignments(req, res);
-    } catch (error) {
-      next(error);
-    }
+  (req: Request, res: Response, next: NextFunction) => {
+    teacherAssignmentController.updateAssignments(req, res).catch(next);
   }
 );
 
