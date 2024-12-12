@@ -1,13 +1,20 @@
 import { Router } from 'express';
 import type { Request, Response, NextFunction } from 'express';
 import { teacherAssignmentController } from '../controllers/teacherAssignment';
-import { authMiddleware } from '../middleware/auth';
+import { authMiddleware, AuthRequest } from '../middleware/auth';
 import { validateRequest } from '../middleware/validator';
 
 const router = Router();
 
 // Middleware pro ověření autentizace
 router.use(authMiddleware);
+
+// Helper pro typově bezpečné handlery
+const asyncHandler = (fn: (req: AuthRequest, res: Response) => Promise<void>) => {
+  return function(req: Request, res: Response, next: NextFunction): void {
+    Promise.resolve(fn(req as AuthRequest, res)).catch(next);
+  };
+};
 
 // GET /api/classes/:classId/assignments - Získat všechna přiřazení pro třídu
 router.get('/:classId/assignments',
@@ -16,13 +23,7 @@ router.get('/:classId/assignments',
       classId: { type: 'number', required: true }
     }
   }),
-  async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-    try {
-      await teacherAssignmentController.getAssignments(req, res);
-    } catch (error) {
-      next(error);
-    }
-  }
+  asyncHandler(teacherAssignmentController.getAssignments)
 );
 
 // POST /api/classes/:classId/assignments - Vytvořit nové přiřazení
@@ -36,13 +37,7 @@ router.post('/:classId/assignments',
       subjectId: { type: 'number', required: true }
     }
   }),
-  async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-    try {
-      await teacherAssignmentController.createAssignment(req, res);
-    } catch (error) {
-      next(error);
-    }
-  }
+  asyncHandler(teacherAssignmentController.createAssignment)
 );
 
 // DELETE /api/classes/:classId/assignments/:assignmentId - Smazat přiřazení
@@ -53,13 +48,7 @@ router.delete('/:classId/assignments/:assignmentId',
       assignmentId: { type: 'number', required: true }
     }
   }),
-  async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-    try {
-      await teacherAssignmentController.deleteAssignment(req, res);
-    } catch (error) {
-      next(error);
-    }
-  }
+  asyncHandler(teacherAssignmentController.deleteAssignment)
 );
 
 // PUT /api/classes/:classId/assignments - Aktualizovat všechna přiřazení pro třídu
@@ -82,13 +71,7 @@ router.put('/:classId/assignments',
       }
     }
   }),
-  async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-    try {
-      await teacherAssignmentController.updateAssignments(req, res);
-    } catch (error) {
-      next(error);
-    }
-  }
+  asyncHandler(teacherAssignmentController.updateAssignments)
 );
 
 export default router; 

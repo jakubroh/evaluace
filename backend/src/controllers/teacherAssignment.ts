@@ -2,6 +2,8 @@ import { Request, Response } from 'express';
 import { pool } from '../db/pool';
 import { AuthRequest } from '../middleware/auth';
 
+type AsyncRequestHandler = (req: AuthRequest, res: Response) => Promise<void>;
+
 export const teacherAssignmentController = {
   getAssignments: async (req: AuthRequest, res: Response): Promise<void> => {
     try {
