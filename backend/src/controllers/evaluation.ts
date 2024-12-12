@@ -536,8 +536,8 @@ export const evaluationController = {
 
       // Generování PDF pomocí puppeteer
       const browser = await puppeteer.launch({
-        headless: true,
-        args: ['--no-sandbox']
+        headless: 'new',
+        args: ['--no-sandbox', '--disable-setuid-sandbox']
       });
       const page = await browser.newPage();
       await page.setContent(html, { waitUntil: 'networkidle0' });
