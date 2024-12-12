@@ -1,4 +1,4 @@
-import { Router } from 'express';
+import { Router, Response } from 'express';
 import type { RequestHandler } from 'express';
 import { teacherAssignmentController } from '../controllers/teacherAssignment';
 import { authMiddleware, AuthRequest } from '../middleware/auth';
@@ -11,8 +11,12 @@ router.use(authMiddleware);
 
 // Helper pro typově bezpečné handlery
 const asyncHandler = (fn: (req: AuthRequest, res: Response) => Promise<void>): RequestHandler => {
-  return (req, res, next) => {
-    Promise.resolve(fn(req as AuthRequest, res)).catch(next);
+  return async (req, res, next): Promise<void> => {
+    try {
+      await fn(req as AuthRequest, res);
+    } catch (error) {
+      next(error);
+    }
   };
 };
 
