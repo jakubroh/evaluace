@@ -11,7 +11,7 @@ import teacherAssignmentRoutes from './routes/teacherAssignment';
 
 dotenv.config();
 
-const app = express();
+export const app = express();
 
 // Middleware
 app.use(cors({
@@ -40,8 +40,10 @@ app.use((err: Error, req: express.Request, res: express.Response, next: express.
   res.status(500).json({ message: 'Interní chyba serveru' });
 });
 
-const PORT = process.env.PORT || 3001;
-
-app.listen(PORT, () => {
-  console.log(`Server běží na portu ${PORT}`);
-}); 
+// Spustit server pouze pokud není soubor importován (např. v testech)
+if (require.main === module) {
+  const PORT = process.env.PORT || 3001;
+  app.listen(PORT, () => {
+    console.log(`Server běží na portu ${PORT}`);
+  });
+} 
