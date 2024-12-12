@@ -1,45 +1,40 @@
-import { Router, Response, NextFunction, Request } from 'express';
+import { Router, Response, NextFunction, Request, Handler } from 'express';
 import { teacherAssignmentController } from '../controllers/teacherAssignment';
 import { authMiddleware, AuthRequest } from '../middleware/auth';
 import { validateRequest } from '../middleware/validator';
-import { ParamsDictionary } from 'express-serve-static-core';
 
 const router = Router();
-
-type AsyncHandler<P = ParamsDictionary, ResBody = any, ReqBody = any> = (
-  req: AuthRequest & { params: P } & { body: ReqBody },
-  res: Response<ResBody>
-) => Promise<void>;
 
 // Middleware pro ověření autentizace
 router.use(authMiddleware);
 
 // Helper pro typově bezpečné handlery
-const asyncHandler = <P = ParamsDictionary, ResBody = any, ReqBody = any>(
-  fn: AsyncHandler<P, ResBody, ReqBody>
-) => {
-  return async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-    try {
-      await fn(req as AuthRequest & { params: P } & { body: ReqBody }, res);
-    } catch (error) {
-      next(error);
-    }
+const asyncHandler = (fn: (req: AuthRequest, res: Response) => Promise<void>): Handler => {
+  return (req: Request, res: Response, next: NextFunction) => {
+    Promise.resolve(fn(req as AuthRequest, res)).catch(next);
+  };
+};
+
+// Middleware pro validaci
+const validate = (schema: any): Handler => {
+  return (req: Request, res: Response, next: NextFunction) => {
+    validateRequest(schema)(req, res, next);
   };
 };
 
 // GET /api/classes/:classId/assignments - Získat všechna přiřazení pro třídu
 router.get('/:classId/assignments',
-  validateRequest({
+  validate({
     params: {
       classId: { type: 'number', required: true }
     }
   }),
-  asyncHandler<{ classId: string }>(teacherAssignmentController.getAssignments)
+  asyncHandler(teacherAssignmentController.getAssignments)
 );
 
 // POST /api/classes/:classId/assignments - Vytvořit nové přiřazení
 router.post('/:classId/assignments',
-  validateRequest({
+  validate({
     params: {
       classId: { type: 'number', required: true }
     },
@@ -48,29 +43,23 @@ router.post('/:classId/assignments',
       subjectId: { type: 'number', required: true }
     }
   }),
-  asyncHandler<
-    { classId: string },
-    any,
-    { teacherId: number; subjectId: number }
-  >(teacherAssignmentController.createAssignment)
+  asyncHandler(teacherAssignmentController.createAssignment)
 );
 
 // DELETE /api/classes/:classId/assignments/:assignmentId - Smazat přiřazení
 router.delete('/:classId/assignments/:assignmentId',
-  validateRequest({
+  validate({
     params: {
       classId: { type: 'number', required: true },
       assignmentId: { type: 'number', required: true }
     }
   }),
-  asyncHandler<{ classId: string; assignmentId: string }>(
-    teacherAssignmentController.deleteAssignment
-  )
+  asyncHandler(teacherAssignmentController.deleteAssignment)
 );
 
 // PUT /api/classes/:classId/assignments - Aktualizovat všechna přiřazení pro třídu
 router.put('/:classId/assignments',
-  validateRequest({
+  validate({
     params: {
       classId: { type: 'number', required: true }
     },
@@ -88,11 +77,7 @@ router.put('/:classId/assignments',
       }
     }
   }),
-  asyncHandler<
-    { classId: string },
-    any,
-    { assignments: Array<{ teacherId: number; subjectId: number }> }
-  >(teacherAssignmentController.updateAssignments)
+  asyncHandler(teacherAssignmentController.updateAssignments)
 );
 
 export default router; 

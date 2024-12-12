@@ -62,7 +62,7 @@ function validateValue(value: any, schema: ValidationSchema): boolean {
 }
 
 export function validateRequest(config: ValidationConfig) {
-  return (req: Request, res: Response, next: NextFunction) => {
+  return (req: Request, res: Response, next: NextFunction): void => {
     const errors: string[] = [];
 
     // Validace parametrů v URL
@@ -101,7 +101,8 @@ export function validateRequest(config: ValidationConfig) {
     }
 
     if (errors.length > 0) {
-      return res.status(400).json({ errors });
+      res.status(400).json({ errors });
+      return;
     }
 
     next();
