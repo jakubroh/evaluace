@@ -15,7 +15,13 @@ router.get('/:classId/assignments',
       classId: { type: 'number', required: true }
     }
   }),
-  teacherAssignmentController.getAssignments
+  async (req, res, next) => {
+    try {
+      await teacherAssignmentController.getAssignments(req, res);
+    } catch (error) {
+      next(error);
+    }
+  }
 );
 
 // POST /api/classes/:classId/assignments - Vytvořit nové přiřazení
@@ -29,7 +35,13 @@ router.post('/:classId/assignments',
       subjectId: { type: 'number', required: true }
     }
   }),
-  teacherAssignmentController.createAssignment
+  async (req, res, next) => {
+    try {
+      await teacherAssignmentController.createAssignment(req, res);
+    } catch (error) {
+      next(error);
+    }
+  }
 );
 
 // DELETE /api/classes/:classId/assignments/:assignmentId - Smazat přiřazení
@@ -40,7 +52,13 @@ router.delete('/:classId/assignments/:assignmentId',
       assignmentId: { type: 'number', required: true }
     }
   }),
-  teacherAssignmentController.deleteAssignment
+  async (req, res, next) => {
+    try {
+      await teacherAssignmentController.deleteAssignment(req, res);
+    } catch (error) {
+      next(error);
+    }
+  }
 );
 
 // PUT /api/classes/:classId/assignments - Aktualizovat všechna přiřazení pro třídu
@@ -63,7 +81,13 @@ router.put('/:classId/assignments',
       }
     }
   }),
-  teacherAssignmentController.updateAssignments
+  async (req, res, next) => {
+    try {
+      await teacherAssignmentController.updateAssignments(req, res);
+    } catch (error) {
+      next(error);
+    }
+  }
 );
 
 export default router; 
