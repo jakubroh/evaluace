@@ -25,7 +25,7 @@ ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true \
 COPY package*.json ./
 
 # Instalace všech závislostí včetně devDependencies pro build
-RUN npm ci
+RUN npm install
 
 # Kopírování zdrojových souborů
 COPY . .
@@ -33,8 +33,8 @@ COPY . .
 # Build aplikace
 RUN npm run build
 
-# Odstranění devDependencies a build souborů pro produkci
-RUN npm ci --only=production && \
+# Odstranění devDependencies pro produkci
+RUN npm prune --production && \
     npm cache clean --force
 
 # Expose port
