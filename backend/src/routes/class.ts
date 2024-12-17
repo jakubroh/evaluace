@@ -1,9 +1,8 @@
 import { Router } from 'express';
 import { ClassController } from '../controllers/class';
 import { Pool } from 'pg';
-import { body, param } from 'express-validator';
 import { validateRequest } from '../middleware/validator';
-import { authenticateJWT, isAdminOrDirector } from '../middleware/auth';
+import { authMiddleware, isAdminOrDirector } from '../middleware/auth';
 
 export const createClassRouter = (pool: Pool) => {
   const router = Router();
@@ -11,58 +10,74 @@ export const createClassRouter = (pool: Pool) => {
 
   // Získání seznamu tříd
   router.get('/',
-    authenticateJWT,
+    authMiddleware,
     isAdminOrDirector,
     classController.getClasses
   );
 
   // Vytvoření nové třídy
   router.post('/',
-    authenticateJWT,
+    authMiddleware,
     isAdminOrDirector,
-    [
-      body('name').notEmpty().withMessage('Název třídy je povinný'),
-      body('schoolId').isInt().withMessage('ID školy musí být číslo'),
-      body('directorId').isInt().withMessage('ID ředitele musí být číslo'),
-      validateRequest
-    ],
+    validateRequest({
+      body: {
+        name: { type: 'string', required: true },
+        schoolId: { type: 'number', required: true },
+        directorId: { type: 'number', required: true }
+      }
+    }),
     classController.createClass
   );
 
   // Aktualizace třídy
   router.put('/:id',
-    authenticateJWT,
+    authMiddleware,
     isAdminOrDirector,
-    [
-      param('id').isInt().withMessage('ID třídy musí být číslo'),
-      body('name').notEmpty().withMessage('Název třídy je povinný'),
-      validateRequest
-    ],
+    validateRequest({
+      params: {
+        id: { type: 'number', required: true }
+      },
+      body: {
+        name: { type: 'string', required: true }
+      }
+    }),
     classController.updateClass
   );
 
   // Smazání třídy
   router.delete('/:id',
-    authenticateJWT,
+    authMiddleware,
     isAdminOrDirector,
-    [
-      param('id').isInt().withMessage('ID třídy musí být číslo'),
-      validateRequest
-    ],
+    validateRequest({
+      params: {
+        id: { type: 'number', required: true }
+      }
+    }),
     classController.deleteClass
   );
 
   // Přiřazení učitelů a předmětů ke třídě
   router.post('/:id/assignments',
-    authenticateJWT,
+    authMiddleware,
     isAdminOrDirector,
-    [
-      param('id').isInt().withMessage('ID třídy musí být číslo'),
-      body('assignments').isArray().withMessage('Přiřazení musí být pole'),
-      body('assignments.*.subjectId').isInt().withMessage('ID předmětu musí být číslo'),
-      body('assignments.*.teacherId').isInt().withMessage('ID učitele musí být číslo'),
-      validateRequest
-    ],
+    validateRequest({
+      params: {
+        id: { type: 'number', required: true }
+      },
+      body: {
+        assignments: {
+          type: 'array',
+          required: true,
+          items: {
+            type: 'object',
+            properties: {
+              subjectId: { type: 'number', required: true },
+              teacherId: { type: 'number', required: true }
+            }
+          }
+        }
+      }
+    }),
     classController.assignTeachersAndSubjects
   );
 

@@ -1,4 +1,4 @@
-import { Router, Response, NextFunction, Request } from 'express';
+import { Router, Response, NextFunction, Request, RequestHandler } from 'express';
 import { evaluationController } from '../controllers/evaluation';
 import { authMiddleware, AuthRequest, isAdminOrDirector } from '../middleware/auth';
 import { validateRequest } from '../middleware/validator';
@@ -6,16 +6,9 @@ import { validateRequest } from '../middleware/validator';
 const router = Router();
 
 // Helper pro typově bezpečné handlery
-const asyncHandler = <T extends Request>(fn: (req: T, res: Response) => Promise<void>) => {
+const asyncHandler = <T extends Request>(fn: (req: T, res: Response) => Promise<void>): RequestHandler => {
   return (req: Request, res: Response, next: NextFunction) => {
     Promise.resolve(fn(req as T, res)).catch(next);
-  };
-};
-
-// Middleware pro validaci
-const validate = (schema: any) => {
-  return (req: Request, res: Response, next: NextFunction) => {
-    validateRequest(schema)(req, res, next);
   };
 };
 
@@ -29,7 +22,7 @@ router.get('/',
 router.get('/:id',
   authMiddleware,
   isAdminOrDirector,
-  validate({
+  validateRequest({
     params: {
       id: { type: 'number', required: true }
     }
@@ -40,7 +33,7 @@ router.get('/:id',
 router.post('/',
   authMiddleware,
   isAdminOrDirector,
-  validate({
+  validateRequest({
     body: {
       name: { type: 'string', required: true },
       startDate: { type: 'string', required: true },
@@ -54,7 +47,7 @@ router.post('/',
 router.put('/:id',
   authMiddleware,
   isAdminOrDirector,
-  validate({
+  validateRequest({
     params: {
       id: { type: 'number', required: true }
     },
@@ -71,7 +64,7 @@ router.put('/:id',
 router.delete('/:id',
   authMiddleware,
   isAdminOrDirector,
-  validate({
+  validateRequest({
     params: {
       id: { type: 'number', required: true }
     }
@@ -83,7 +76,7 @@ router.delete('/:id',
 router.get('/:id/stats',
   authMiddleware,
   isAdminOrDirector,
-  validate({
+  validateRequest({
     params: {
       id: { type: 'number', required: true }
     }
@@ -94,7 +87,7 @@ router.get('/:id/stats',
 router.get('/:id/responses',
   authMiddleware,
   isAdminOrDirector,
-  validate({
+  validateRequest({
     params: {
       id: { type: 'number', required: true }
     }
@@ -105,7 +98,7 @@ router.get('/:id/responses',
 router.get('/:id/export/csv',
   authMiddleware,
   isAdminOrDirector,
-  validate({
+  validateRequest({
     params: {
       id: { type: 'number', required: true }
     }
@@ -116,7 +109,7 @@ router.get('/:id/export/csv',
 router.get('/:id/export/pdf',
   authMiddleware,
   isAdminOrDirector,
-  validate({
+  validateRequest({
     params: {
       id: { type: 'number', required: true }
     }
@@ -126,7 +119,7 @@ router.get('/:id/export/pdf',
 
 // Veřejná routa pro ukládání odpovědí
 router.post('/:id/responses',
-  validate({
+  validateRequest({
     params: {
       id: { type: 'number', required: true }
     },

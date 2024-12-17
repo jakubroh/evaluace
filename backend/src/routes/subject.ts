@@ -12,13 +12,6 @@ const asyncHandler = (fn: RequestHandler): RequestHandler => {
   };
 };
 
-// Middleware pro validaci
-const validate = (schema: any): RequestHandler => {
-  return (req, res, next) => {
-    validateRequest(schema)(req, res, next);
-  };
-};
-
 // Middleware pro ověření autentizace
 router.use(authMiddleware);
 
@@ -27,7 +20,7 @@ router.get('/', asyncHandler(subjectController.getAllSubjects));
 
 // POST /api/subjects - Vytvořit nový předmět
 router.post('/',
-  validate({
+  validateRequest({
     body: {
       name: { type: 'string', required: true }
     }
@@ -37,7 +30,7 @@ router.post('/',
 
 // PUT /api/subjects/:id - Upravit předmět
 router.put('/:id',
-  validate({
+  validateRequest({
     params: {
       id: { type: 'number', required: true }
     },
@@ -50,7 +43,7 @@ router.put('/:id',
 
 // DELETE /api/subjects/:id - Smazat předmět
 router.delete('/:id',
-  validate({
+  validateRequest({
     params: {
       id: { type: 'number', required: true }
     }

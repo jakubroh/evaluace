@@ -1,4 +1,4 @@
-import { Request, Response, NextFunction } from 'express';
+import { Request, Response, NextFunction, RequestHandler } from 'express';
 
 interface ValidationSchema {
   type: string;
@@ -61,8 +61,8 @@ function validateValue(value: any, schema: ValidationSchema): boolean {
   }
 }
 
-export function validateRequest(config: ValidationConfig) {
-  return (req: Request, res: Response, next: NextFunction): void => {
+export function validateRequest(config: ValidationConfig): RequestHandler {
+  return (req: Request, res: Response, next: NextFunction) => {
     const errors: string[] = [];
 
     // Validace parametrů v URL
