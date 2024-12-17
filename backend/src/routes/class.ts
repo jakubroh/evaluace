@@ -1,4 +1,4 @@
-import { Router } from 'express';
+import { Router, RequestHandler } from 'express';
 import { ClassController } from '../controllers/class';
 import { Pool } from 'pg';
 import { validateRequest } from '../middleware/validator';
@@ -8,11 +8,18 @@ export const createClassRouter = (pool: Pool) => {
   const router = Router();
   const classController = new ClassController(pool);
 
+  // Helper pro typově bezpečné handlery
+  const asyncHandler = (fn: RequestHandler): RequestHandler => {
+    return (req, res, next) => {
+      Promise.resolve(fn(req, res, next)).catch(next);
+    };
+  };
+
   // Získání seznamu tříd
   router.get('/',
     authMiddleware,
     isAdminOrDirector,
-    classController.getClasses
+    asyncHandler(classController.getClasses)
   );
 
   // Vytvoření nové třídy
@@ -26,7 +33,7 @@ export const createClassRouter = (pool: Pool) => {
         directorId: { type: 'number', required: true }
       }
     }),
-    classController.createClass
+    asyncHandler(classController.createClass)
   );
 
   // Aktualizace třídy
@@ -41,7 +48,7 @@ export const createClassRouter = (pool: Pool) => {
         name: { type: 'string', required: true }
       }
     }),
-    classController.updateClass
+    asyncHandler(classController.updateClass)
   );
 
   // Smazání třídy
@@ -53,7 +60,7 @@ export const createClassRouter = (pool: Pool) => {
         id: { type: 'number', required: true }
       }
     }),
-    classController.deleteClass
+    asyncHandler(classController.deleteClass)
   );
 
   // Přiřazení učitelů a předmětů ke třídě
@@ -78,7 +85,7 @@ export const createClassRouter = (pool: Pool) => {
         }
       }
     }),
-    classController.assignTeachersAndSubjects
+    asyncHandler(classController.assignTeachersAndSubjects)
   );
 
   return router;

@@ -1,14 +1,14 @@
-import { Request, Response } from 'express';
+import { Response, NextFunction } from 'express';
 import { pool } from '../db/pool';
 import { AuthRequest } from '../middleware/auth';
+import { AppError } from '../middleware/errorHandler';
 
 export const teacherController = {
   // Získat všechny učitele
-  getAllTeachers: async (req: AuthRequest, res: Response): Promise<void> => {
+  getAllTeachers: async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
     try {
       if (!req.user) {
-        res.status(401).json({ error: 'Neautorizovaný přístup' });
-        return;
+        throw new AppError(401, 'Neautorizovaný přístup');
       }
 
       const result = await pool.query(
@@ -17,19 +17,17 @@ export const teacherController = {
       );
       res.json(result.rows);
     } catch (error) {
-      console.error('Chyba při získávání učitelů:', error);
-      res.status(500).json({ error: 'Interní chyba serveru' });
+      next(error);
     }
   },
 
   // Přidat nového učitele
-  createTeacher: async (req: AuthRequest, res: Response): Promise<void> => {
+  createTeacher: async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
     const { name } = req.body;
 
     try {
       if (!req.user) {
-        res.status(401).json({ error: 'Neautorizovaný přístup' });
-        return;
+        throw new AppError(401, 'Neautorizovaný přístup');
       }
 
       const result = await pool.query(
@@ -38,8 +36,7 @@ export const teacherController = {
       );
       res.status(201).json(result.rows[0]);
     } catch (error) {
-      console.error('Chyba při vytváření učitele:', error);
-      res.status(500).json({ error: 'Interní chyba serveru' });
+      next(error);
     }
   },
 

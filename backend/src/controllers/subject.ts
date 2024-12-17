@@ -1,14 +1,14 @@
-import { Response } from 'express';
+import { Response, NextFunction } from 'express';
 import { pool } from '../db/pool';
 import { AuthRequest } from '../middleware/auth';
+import { AppError } from '../middleware/errorHandler';
 
 export const subjectController = {
   // Získat všechny předměty
-  getAllSubjects: async (req: AuthRequest, res: Response): Promise<void> => {
+  getAllSubjects: async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
     try {
       if (!req.user) {
-        res.status(401).json({ error: 'Neautorizovaný přístup' });
-        return;
+        throw new AppError(401, 'Neautorizovaný přístup');
       }
 
       const result = await pool.query(
@@ -17,19 +17,17 @@ export const subjectController = {
       );
       res.json(result.rows);
     } catch (error) {
-      console.error('Chyba při získávání předmětů:', error);
-      res.status(500).json({ error: 'Interní chyba serveru' });
+      next(error);
     }
   },
 
   // Přidat nový předmět
-  createSubject: async (req: AuthRequest, res: Response): Promise<void> => {
+  createSubject: async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
     const { name } = req.body;
 
     try {
       if (!req.user) {
-        res.status(401).json({ error: 'Neautorizovaný přístup' });
-        return;
+        throw new AppError(401, 'Neautorizovaný přístup');
       }
 
       const result = await pool.query(
@@ -38,20 +36,18 @@ export const subjectController = {
       );
       res.status(201).json(result.rows[0]);
     } catch (error) {
-      console.error('Chyba při vytváření předmětu:', error);
-      res.status(500).json({ error: 'Interní chyba serveru' });
+      next(error);
     }
   },
 
   // Upravit předmět
-  updateSubject: async (req: AuthRequest, res: Response): Promise<void> => {
+  updateSubject: async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
     const { id } = req.params;
     const { name } = req.body;
 
     try {
       if (!req.user) {
-        res.status(401).json({ error: 'Neautorizovaný přístup' });
-        return;
+        throw new AppError(401, 'Neautorizovaný přístup');
       }
 
       const result = await pool.query(
@@ -60,25 +56,22 @@ export const subjectController = {
       );
 
       if (result.rows.length === 0) {
-        res.status(404).json({ error: 'Předmět nebyl nalezen' });
-        return;
+        throw new AppError(404, 'Předmět nebyl nalezen');
       }
 
       res.json(result.rows[0]);
     } catch (error) {
-      console.error('Chyba při aktualizaci předmětu:', error);
-      res.status(500).json({ error: 'Interní chyba serveru' });
+      next(error);
     }
   },
 
   // Smazat předmět
-  deleteSubject: async (req: AuthRequest, res: Response): Promise<void> => {
+  deleteSubject: async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
     const { id } = req.params;
 
     try {
       if (!req.user) {
-        res.status(401).json({ error: 'Neautorizovaný přístup' });
-        return;
+        throw new AppError(401, 'Neautorizovaný přístup');
       }
 
       const result = await pool.query(
@@ -87,14 +80,12 @@ export const subjectController = {
       );
 
       if (result.rows.length === 0) {
-        res.status(404).json({ error: 'Předmět nebyl nalezen' });
-        return;
+        throw new AppError(404, 'Předmět nebyl nalezen');
       }
 
       res.status(204).send();
     } catch (error) {
-      console.error('Chyba při mazání předmětu:', error);
-      res.status(500).json({ error: 'Interní chyba serveru' });
+      next(error);
     }
   }
 }; 

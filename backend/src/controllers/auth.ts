@@ -1,7 +1,8 @@
-import { Request, Response } from 'express';
+import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import { UserModel } from '../models/user';
 import { Pool } from 'pg';
+import { AppError } from '../middleware/errorHandler';
 
 export class AuthController {
   private userModel: UserModel;
@@ -10,20 +11,20 @@ export class AuthController {
     this.userModel = new UserModel(pool);
   }
 
-  login = async (req: Request, res: Response) => {
+  login = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     const { email, password } = req.body;
 
     try {
       const user = await this.userModel.findByEmail(email);
 
       if (!user) {
-        return res.status(401).json({ message: 'Nesprávné přihlašovací údaje' });
+        throw new AppError(401, 'Nesprávné přihlašovací údaje');
       }
 
       const isValid = await this.userModel.verifyPassword(user, password);
 
       if (!isValid) {
-        return res.status(401).json({ message: 'Nesprávné přihlašovací údaje' });
+        throw new AppError(401, 'Nesprávné přihlašovací údaje');
       }
 
       const token = jwt.sign(
@@ -48,19 +49,18 @@ export class AuthController {
         }
       });
     } catch (error) {
-      console.error('Chyba při přihlášení:', error);
-      res.status(500).json({ message: 'Interní chyba serveru' });
+      next(error);
     }
   };
 
-  registerDirector = async (req: Request, res: Response) => {
+  registerDirector = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     const { email, password, firstName, lastName, schoolId } = req.body;
 
     try {
       const existingUser = await this.userModel.findByEmail(email);
 
       if (existingUser) {
-        return res.status(400).json({ message: 'Uživatel s tímto emailem již existuje' });
+        throw new AppError(400, 'Uživatel s tímto emailem již existuje');
       }
 
       const user = await this.userModel.create({
@@ -83,19 +83,18 @@ export class AuthController {
         }
       });
     } catch (error) {
-      console.error('Chyba při registraci ředitele:', error);
-      res.status(500).json({ message: 'Interní chyba serveru' });
+      next(error);
     }
   };
 
-  registerAdmin = async (req: Request, res: Response) => {
+  registerAdmin = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     const { email, password, firstName, lastName } = req.body;
 
     try {
       const existingUser = await this.userModel.findByEmail(email);
 
       if (existingUser) {
-        return res.status(400).json({ message: 'Uživatel s tímto emailem již existuje' });
+        throw new AppError(400, 'Uživatel s tímto emailem již existuje');
       }
 
       const user = await this.userModel.create({
@@ -116,8 +115,7 @@ export class AuthController {
         }
       });
     } catch (error) {
-      console.error('Chyba při registraci admina:', error);
-      res.status(500).json({ message: 'Interní chyba serveru' });
+      next(error);
     }
   };
 } 

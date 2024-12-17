@@ -1,13 +1,13 @@
-import { Response } from 'express';
+import { Response, NextFunction } from 'express';
 import { pool } from '../db/pool';
 import { AuthRequest } from '../middleware/auth';
+import { AppError } from '../middleware/errorHandler';
 
 export const teacherAssignmentController = {
-  getAssignments: async (req: AuthRequest, res: Response): Promise<void> => {
+  getAssignments: async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
     try {
       if (!req.user) {
-        res.status(401).json({ error: 'Neautorizovaný přístup' });
-        return;
+        throw new AppError(401, 'Neautorizovaný přístup');
       }
 
       const result = await pool.query(
@@ -16,16 +16,14 @@ export const teacherAssignmentController = {
       );
       res.json(result.rows);
     } catch (error) {
-      console.error('Chyba při získávání přiřazení:', error);
-      res.status(500).json({ error: 'Interní chyba serveru' });
+      next(error);
     }
   },
 
-  createAssignment: async (req: AuthRequest, res: Response): Promise<void> => {
+  createAssignment: async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
     try {
       if (!req.user) {
-        res.status(401).json({ error: 'Neautorizovaný přístup' });
-        return;
+        throw new AppError(401, 'Neautorizovaný přístup');
       }
 
       const { teacherId, subjectId } = req.body;
@@ -35,8 +33,7 @@ export const teacherAssignmentController = {
       );
       res.status(201).json(result.rows[0]);
     } catch (error) {
-      console.error('Chyba při vytváření přiřazení:', error);
-      res.status(500).json({ error: 'Interní chyba serveru' });
+      next(error);
     }
   },
 

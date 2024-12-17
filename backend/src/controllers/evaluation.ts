@@ -1,6 +1,7 @@
-import { Response } from 'express';
+import { Response, NextFunction } from 'express';
 import { pool } from '../db/pool';
 import { AuthRequest } from '../middleware/auth';
+import { AppError } from '../middleware/errorHandler';
 
 interface EvaluationData {
   name: string;
@@ -25,11 +26,10 @@ interface EvaluationResponse {
 }
 
 export const evaluationController = {
-  getEvaluations: async (req: AuthRequest, res: Response): Promise<void> => {
+  getEvaluations: async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
     try {
       if (!req.user) {
-        res.status(401).json({ error: 'Neautorizovaný přístup' });
-        return;
+        throw new AppError(401, 'Neautorizovaný přístup');
       }
 
       const result = await pool.query(
@@ -38,16 +38,14 @@ export const evaluationController = {
       );
       res.json(result.rows);
     } catch (error) {
-      console.error('Chyba při získávání evaluací:', error);
-      res.status(500).json({ error: 'Interní chyba serveru' });
+      next(error);
     }
   },
 
-  getEvaluation: async (req: AuthRequest, res: Response): Promise<void> => {
+  getEvaluation: async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
     try {
       if (!req.user) {
-        res.status(401).json({ error: 'Neautorizovaný přístup' });
-        return;
+        throw new AppError(401, 'Neautorizovaný přístup');
       }
 
       const result = await pool.query(
@@ -56,24 +54,21 @@ export const evaluationController = {
       );
 
       if (result.rows.length === 0) {
-        res.status(404).json({ error: 'Evaluace nebyla nalezena' });
-        return;
+        throw new AppError(404, 'Evaluace nebyla nalezena');
       }
 
       res.json(result.rows[0]);
     } catch (error) {
-      console.error('Chyba při získávání evaluace:', error);
-      res.status(500).json({ error: 'Interní chyba serveru' });
+      next(error);
     }
   },
 
-  createEvaluation: async (req: AuthRequest, res: Response): Promise<void> => {
+  createEvaluation: async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
     const data: EvaluationData = req.body;
 
     try {
       if (!req.user) {
-        res.status(401).json({ error: 'Neautorizovaný přístup' });
-        return;
+        throw new AppError(401, 'Neautorizovaný přístup');
       }
 
       const result = await pool.query(
@@ -85,19 +80,17 @@ export const evaluationController = {
 
       res.status(201).json(result.rows[0]);
     } catch (error) {
-      console.error('Chyba při vytváření evaluace:', error);
-      res.status(500).json({ error: 'Interní chyba serveru' });
+      next(error);
     }
   },
 
-  updateEvaluation: async (req: AuthRequest, res: Response): Promise<void> => {
+  updateEvaluation: async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
     const { id } = req.params;
     const data: EvaluationData = req.body;
 
     try {
       if (!req.user) {
-        res.status(401).json({ error: 'Neautorizovaný přístup' });
-        return;
+        throw new AppError(401, 'Neautorizovaný přístup');
       }
 
       const result = await pool.query(
@@ -109,24 +102,21 @@ export const evaluationController = {
       );
 
       if (result.rows.length === 0) {
-        res.status(404).json({ error: 'Evaluace nebyla nalezena' });
-        return;
+        throw new AppError(404, 'Evaluace nebyla nalezena');
       }
 
       res.json(result.rows[0]);
     } catch (error) {
-      console.error('Chyba při aktualizaci evaluace:', error);
-      res.status(500).json({ error: 'Interní chyba serveru' });
+      next(error);
     }
   },
 
-  deleteEvaluation: async (req: AuthRequest, res: Response): Promise<void> => {
+  deleteEvaluation: async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
     const { id } = req.params;
 
     try {
       if (!req.user) {
-        res.status(401).json({ error: 'Neautorizovaný přístup' });
-        return;
+        throw new AppError(401, 'Neautorizovaný přístup');
       }
 
       const result = await pool.query(
@@ -135,33 +125,28 @@ export const evaluationController = {
       );
 
       if (result.rows.length === 0) {
-        res.status(404).json({ error: 'Evaluace nebyla nalezena' });
-        return;
+        throw new AppError(404, 'Evaluace nebyla nalezena');
       }
 
       res.status(204).send();
     } catch (error) {
-      console.error('Chyba při mazání evaluace:', error);
-      res.status(500).json({ error: 'Interní chyba serveru' });
+      next(error);
     }
   },
 
-  getEvaluationStats: async (req: AuthRequest, res: Response): Promise<void> => {
+  getEvaluationStats: async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
     const { id } = req.params;
 
     try {
       if (!req.user) {
-        res.status(401).json({ error: 'Neautorizovaný přístup' });
-        return;
+        throw new AppError(401, 'Neautorizovaný přístup');
       }
 
-      // Získat celkový počet odpovědí
       const responsesResult = await pool.query(
         'SELECT COUNT(*) FROM evaluation_responses WHERE evaluation_id = $1',
         [id]
       );
 
-      // Získat průměrné hodnocení pro každé kritérium
       const averagesResult = await pool.query(
         `SELECT 
           AVG((criteria->>'preparation')::numeric) as preparation,
@@ -174,7 +159,6 @@ export const evaluationController = {
         [id]
       );
 
-      // Získat míru dokončení (počet použitých kódů / celkový počet kódů)
       const completionResult = await pool.query(
         `SELECT 
           CAST(COUNT(CASE WHEN is_used THEN 1 END) AS float) / 
@@ -190,18 +174,16 @@ export const evaluationController = {
         completionRate: completionResult.rows[0].completion_rate || 0
       });
     } catch (error) {
-      console.error('Chyba při získávání statistik:', error);
-      res.status(500).json({ error: 'Interní chyba serveru' });
+      next(error);
     }
   },
 
-  getEvaluationResponses: async (req: AuthRequest, res: Response): Promise<void> => {
+  getEvaluationResponses: async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
     const { id } = req.params;
 
     try {
       if (!req.user) {
-        res.status(401).json({ error: 'Neautorizovaný přístup' });
-        return;
+        throw new AppError(401, 'Neautorizovaný přístup');
       }
 
       const result = await pool.query(
@@ -221,21 +203,18 @@ export const evaluationController = {
 
       res.json(result.rows);
     } catch (error) {
-      console.error('Chyba při získávání odpovědí:', error);
-      res.status(500).json({ error: 'Interní chyba serveru' });
+      next(error);
     }
   },
 
-  exportToCSV: async (req: AuthRequest, res: Response): Promise<void> => {
+  exportToCSV: async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
     const { id } = req.params;
 
     try {
       if (!req.user) {
-        res.status(401).json({ error: 'Neautorizovaný přístup' });
-        return;
+        throw new AppError(401, 'Neautorizovaný přístup');
       }
 
-      // Získat data pro export
       const result = await pool.query(
         `SELECT 
           er.*,
@@ -251,7 +230,6 @@ export const evaluationController = {
         [id]
       );
 
-      // Vytvořit CSV
       const csv = [
         'Učitel,Předmět,Třída,Příprava,Výklad,Zapojení,Atmosféra,Individuální přístup,Komentář,Vytvořeno',
         ...result.rows.map(row => [
@@ -272,29 +250,26 @@ export const evaluationController = {
       res.setHeader('Content-Disposition', `attachment; filename=evaluace-${id}.csv`);
       res.send(csv);
     } catch (error) {
-      console.error('Chyba při exportu do CSV:', error);
-      res.status(500).json({ error: 'Interní chyba serveru' });
+      next(error);
     }
   },
 
-  exportToPDF: async (req: AuthRequest, res: Response): Promise<void> => {
+  exportToPDF: async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
     const { id } = req.params;
 
     try {
       if (!req.user) {
-        res.status(401).json({ error: 'Neautorizovaný přístup' });
-        return;
+        throw new AppError(401, 'Neautorizovaný přístup');
       }
 
       // TODO: Implementovat generování PDF
-      res.status(501).json({ error: 'Funkce není implementována' });
+      throw new AppError(501, 'Funkce není implementována');
     } catch (error) {
-      console.error('Chyba při exportu do PDF:', error);
-      res.status(500).json({ error: 'Interní chyba serveru' });
+      next(error);
     }
   },
 
-  saveResponse: async (req: AuthRequest, res: Response): Promise<void> => {
+  saveResponse: async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
     const { id: evaluationId } = req.params;
     const {
       teacherId,
@@ -313,41 +288,42 @@ export const evaluationController = {
       );
 
       if (accessCodeResult.rows.length === 0) {
-        res.status(400).json({ error: 'Neplatný přístupový kód' });
-        return;
+        throw new AppError(400, 'Neplatný přístupový kód');
       }
 
       const accessCode = accessCodeResult.rows[0];
       if (accessCode.is_used) {
-        res.status(400).json({ error: 'Tento kód již byl použit' });
-        return;
+        throw new AppError(400, 'Tento kód již byl použit');
       }
 
       // Začít transakci
       await pool.query('BEGIN');
 
-      // Uložit odpověď
-      const responseResult = await pool.query(
-        `INSERT INTO evaluation_responses 
-         (evaluation_id, teacher_id, subject_id, class_id, criteria, comment)
-         VALUES ($1, $2, $3, $4, $5, $6)
-         RETURNING *`,
-        [evaluationId, teacherId, subjectId, classId, criteria, comment]
-      );
+      try {
+        // Uložit odpověď
+        const responseResult = await pool.query(
+          `INSERT INTO evaluation_responses 
+           (evaluation_id, teacher_id, subject_id, class_id, criteria, comment)
+           VALUES ($1, $2, $3, $4, $5, $6)
+           RETURNING *`,
+          [evaluationId, teacherId, subjectId, classId, criteria, comment]
+        );
 
-      // Označit kód jako použitý
-      await pool.query(
-        'UPDATE access_codes SET is_used = true WHERE id = $1',
-        [accessCodeId]
-      );
+        // Označit kód jako použitý
+        await pool.query(
+          'UPDATE access_codes SET is_used = true WHERE id = $1',
+          [accessCodeId]
+        );
 
-      await pool.query('COMMIT');
+        await pool.query('COMMIT');
 
-      res.status(201).json(responseResult.rows[0]);
+        res.status(201).json(responseResult.rows[0]);
+      } catch (error) {
+        await pool.query('ROLLBACK');
+        throw error;
+      }
     } catch (error) {
-      await pool.query('ROLLBACK');
-      console.error('Chyba při ukládání odpovědi:', error);
-      res.status(500).json({ error: 'Interní chyba serveru' });
+      next(error);
     }
   }
 }; 
